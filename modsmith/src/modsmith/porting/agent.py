@@ -74,7 +74,8 @@ class ClaudeCodeAgent(Agent):
                        "run `claude` once to sign in, then retry.")
 
     def run(self, prompt, workdir, env=None, log_file=None, timeout=7200):
-        cmd = [self.executable, "-p", "--output-format", "text",
+        # Resolve to a full path so Windows finds claude.cmd without a shell.
+        cmd = [shutil.which(self.executable) or self.executable, "-p", "--output-format", "text",
                "--permission-mode", "acceptEdits",
                "--max-turns", str(self.max_turns),
                "--allowedTools", *CLAUDE_ALLOWED_TOOLS]
@@ -99,7 +100,8 @@ class CommandAgent(Agent):
         pf = workdir / ".modsmith" / "prompt.md"
         pf.parent.mkdir(parents=True, exist_ok=True)
         pf.write_text(prompt, encoding="utf-8")
-        cmd = self.template.format(prompt_file=shlex.quote(str(pf)), workdir=shlex.quote(str(workdir)))
+        quote = (lambda x: subprocess.list2cmdline([x])) if os.name == "nt" else shlex.quote
+        cmd = self.template.format(prompt_file=quote(str(pf)), workdir=quote(str(workdir)))
         return _run(cmd, workdir, env, log_file, timeout, shell=True)
 
 
