@@ -9,7 +9,15 @@ A 221-mod kitchen-sink pack (Create, Mekanism, AE2, Tinkers, Ice and Fire, Alex'
 | Recommended RAM | 8 GB+ |
 | Mods | 221 (see [MODLIST.md](MODLIST.md)) |
 
-## ⬇️ Download
+## ⚒️ Modsmith app for Windows (easiest)
+
+**[Download Modsmith.exe](https://github.com/hugoneale/Modded-Minecraft-2026-/releases/latest/download/Modsmith.exe)**: one file, nothing to install, no Python needed. Double-click it.
+
+The app opens with this pack's 221 mods already loaded. You can untick mods you don't want, add others by searching Modrinth or CurseForge, pick any Minecraft version and loader, then check, install, update or force-port everything. See [Modsmith](#modsmith-update-or-port-the-mods-to-another-minecraft-version) below.
+
+> The first time, Windows SmartScreen may say "Windows protected your PC" because the app isn't code-signed. Click **More info**, then **Run anyway**.
+
+## ⬇️ Download the modpack
 
 **[Download 16MARSHALST.zip](https://github.com/hugoneale/Modded-Minecraft-2026-/raw/main/16MARSHALST.zip)**
 
@@ -45,7 +53,8 @@ The [`modsmith/`](modsmith/) folder contains **Modsmith**, a desktop app that:
 - otherwise **force-ports** the mod from its source code with an AI coding agent, accepting the result only if it builds and keeps every item, block, recipe and worldgen feature
 - optionally (with a warning) decompiles mods that have no public source
 
-**[Download Modsmith (repository ZIP)](https://github.com/hugoneale/Modded-Minecraft-2026-/archive/refs/heads/main.zip)**, unzip it, then run `modsmith/run-modsmith.bat` (Windows), `run-modsmith.command` (macOS) or `run-modsmith.sh` (Linux). See [modsmith/README.md](modsmith/README.md) for details.
+**Windows: [download Modsmith.exe](https://github.com/hugoneale/Modded-Minecraft-2026-/releases/latest/download/Modsmith.exe)** and double-click it. It comes with this pack built in.
+On macOS or Linux, **[download the repository ZIP](https://github.com/hugoneale/Modded-Minecraft-2026-/archive/refs/heads/main.zip)**, unzip it, then run `modsmith/run-modsmith.bat` (Windows), `run-modsmith.command` (macOS) or `run-modsmith.sh` (Linux). See [modsmith/README.md](modsmith/README.md) for details.
 
 To check this pack against the latest version, use **Import pack** with `16MARSHALST.zip`, then click **Check**.
 

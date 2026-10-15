@@ -1,0 +1,81 @@
+# Builds the standalone Windows app (Modsmith.exe) with PyInstaller.
+#  - every push that touches Modsmith: test, build, smoke-test, upload as a workflow artifact
+#  - pushes to main: also publish it as the "latest" release, so
+#    https://github.com/<owner>/<repo>/releases/latest/download/Modsmith.exe always works
+#  - tags v*: publish a versioned release
+name: Build Modsmith.exe
+
+on:
+  push:
+    branches: [main, "claude/**"]
+    tags: ["v*"]
+    paths: ["modsmith/**", "16MARSHALST.zip", ".github/workflows/build-exe.yml"]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: build-exe-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install build tools
+        run: python -m pip install --upgrade pip pyinstaller pytest
+
+      - name: Run tests
+        working-directory: modsmith
+        run: python -m pytest -q
+
+      - name: Build Modsmith.exe
+        working-directory: modsmith
+        run: python packaging/build.py
+
+      - name: Smoke test
+        working-directory: modsmith
+        shell: pwsh
+        run: |
+          $v = Start-Process dist\Modsmith.exe -ArgumentList "--version" -Wait -PassThru
+          if ($v.ExitCode -ne 0) { throw "Modsmith.exe --version failed: $($v.ExitCode)" }
+          # The desktop app must start and stay up (catches missing Tk / bundled files).
+          $p = Start-Process dist\Modsmith.exe -PassThru
+          Start-Sleep -Seconds 20
+          if ($p.HasExited) { throw "Modsmith.exe exited early with code $($p.ExitCode)" }
+          Stop-Process -Id $p.Id -Force
+          "{0:N1} MB" -f ((Get-Item dist\Modsmith.exe).Length / 1MB)
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Modsmith-windows
+          path: modsmith/dist/Modsmith.exe
+          if-no-files-found: error
+
+      - name: Publish latest release
+        if: github.ref == 'refs/heads/main'
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release delete modsmith-latest --cleanup-tag --yes || true
+          gh release create modsmith-latest modsmith/dist/Modsmith.exe \
+            --target "$GITHUB_SHA" --latest \
+            --title "Modsmith for Windows (latest build)" \
+            --notes "Download **Modsmith.exe** below and double-click it. No Python or install needed. Built from ${GITHUB_SHA::7}. If Windows SmartScreen says it protected your PC, click **More info** -> **Run anyway** (the app isn't code-signed)."
+
+      - name: Publish versioned release
+        if: startsWith(github.ref, 'refs/tags/v')
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create "$GITHUB_REF_NAME" modsmith/dist/Modsmith.exe --latest \
+            --title "Modsmith $GITHUB_REF_NAME" --generate-notes
