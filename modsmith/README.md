@@ -95,6 +95,17 @@ With **Allow decompiling** on, mods with no public source are decompiled with [V
 ### Licences
 Ports of mods under licences that allow it (MIT, LGPL, GPL, Apache…) can be shared, with credit. Everything else is marked *personal use only* in the report.
 
+## Verified so far (October 2026)
+
+- **Live check of the 16MARSHAL pack** (221 mods, 1.20.1 Forge → 26.3 NeoForge) took about 16 seconds. It found about 57 official 26.3 builds, auto-added missing libraries such as Lithostitched, and flagged real content losses in official builds: Sophisticated Backpacks dropped its Chipped recipes, and Terralith 26.3 removed its cave biomes, including Crystal Caves.
+- **Real end-to-end port:** *Charm of Undying* 6.5.0 (1.20.1 Forge) → Minecraft 26.3 NeoForge, using Claude Code as the agent:
+  - Modsmith started from the author's `1.21.x` branch, upgraded the Gradle wrapper for Java 25, and ran agent passes until the build passed.
+  - The result is Java 25 bytecode declaring Minecraft `[26.3,26.4)`, with the mixin and Curios slot data intact.
+  - A follow-up `update` recognised the port as up to date and installed its Curios 26.3 dependency automatically.
+  - It has **not** been play-tested in game.
+
+Big mods (Create, Mekanism, Alex's Mobs…) are a much harder job than this, and ports of them will often fail the checks. When a port fails, Modsmith reports it and installs nothing for that mod.
+
 ## Config file (`modsmith.toml`)
 
 Use this to pick mods by ID without the GUI, or to keep a modpack definition in git:

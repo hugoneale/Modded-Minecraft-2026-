@@ -230,3 +230,10 @@ def test_transient_build_errors_are_retried_not_sent_to_agent(tmp_path, forge_ja
                       target=TargetInfo("26.3", "neoforge", None, 25), baseline=extract_features(forge_jar),
                       agent=agent, java_homes={}, log=lambda m: None)
     assert res.ok and res.attempts == 1 and len(agent.prompts) == 1
+
+
+def test_installed_port_counts_as_up_to_date(tmp_path):
+    port = neo_jar(tmp_path / "mods" / "examplemod-port.jar")
+    app = make_app(tmp_path, {}, {}, {})
+    r = app.run([ModRef(f"file:{port}")])[0][0]
+    assert r.status == Status.UP_TO_DATE

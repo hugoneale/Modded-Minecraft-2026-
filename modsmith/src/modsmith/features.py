@@ -171,6 +171,9 @@ def extract_features(jar: Path, namespaces: Optional[Iterable[str]] = None) -> F
                 category = _DATA_FOLDERS.get(m.group(2))
                 if category:
                     fs.add(category, f"{m.group(1)}:{m.group(3)}")
+                elif m.group(2) not in ("tags", "worldgen"):
+                    # e.g. data/<mod>/curios/entities/... - read by another mod
+                    fs.add("integration_data", f"{m.group(1)}/{m.group(2)}/{m.group(3)}")
             elif m and m.group(1) not in _PLATFORM_NAMESPACES and m.group(2) != "tags":
                 # Data the mod provides to *other* mods (Curios slots, JEI, Patchouli books...).
                 fs.add("integration_data", f"{m.group(1)}/{m.group(2)}/{m.group(3)}")

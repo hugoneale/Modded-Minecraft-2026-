@@ -335,6 +335,10 @@ class Modsmith:
             if r.current is None:  # selected by id, not installed yet
                 self._take_official(r, best)
             return r
+        if best is None and r.current and self._targets(r.current):
+            r.status = Status.UP_TO_DATE
+            r.notes.append(f"Installed build already targets Minecraft {t.minecraft} ({t.loader})")
+            return r
         if best is None:
             r.status = Status.NO_OFFICIAL
             r.notes.append(f"No official build for Minecraft {t.minecraft} ({t.loader})")
@@ -362,6 +366,10 @@ class Modsmith:
                 r.status = Status.OFFICIAL_FEATURE_LOSS
                 r.warnings.append("Official build is missing content: " + describe_diff(diff))
         return r
+
+    def _targets(self, jar: JarInfo) -> bool:
+        from .porting.porter import check_metadata
+        return jar.minecraft_range not in ("", "*") and check_metadata(jar.path, self.target()) is None
 
     def _take_official(self, r: ModResult, f: RemoteFile):
         try:
@@ -579,9 +587,11 @@ class Modsmith:
         for _ in range(rounds):
             new = []
             for i in issues:
-                if i.problem == "missing" and i.suggestion and ":" in i.suggestion and i.suggestion not in known:
-                    known.add(i.suggestion)
-                    new.append(ModRef(spec=i.suggestion))
+                if i.problem != "missing" or not i.suggestion or i.suggestion in known:
+                    continue
+                known.add(i.suggestion)
+                # Jar-level dependencies are mod ids ("curios"); look them up as slugs.
+                new.append(ModRef(spec=i.suggestion))
             if not new:
                 break
             self.log(f"Adding {len(new)} missing dependencies...")

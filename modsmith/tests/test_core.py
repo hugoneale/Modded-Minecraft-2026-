@@ -283,6 +283,9 @@ def test_integration_data_and_wrapper(tmp_path):
                                       "data/curios/entities/charm.json": {}, "data/curios/tags/items/charm.json": {}})
     fs = extract_features(j)
     assert fs.categories["integration_data"] == {"curios/entities/charm"}
+    own = make_jar(tmp_path / "d.jar", {"assets/charm/lang/en_us.json": {},
+                                        "data/charm/curios/entities/charm.json": {}})
+    assert extract_features(own).categories["integration_data"] == {"charm/curios/entities/charm"}
     assert min_gradle_for(25) == "9.1.0" and min_gradle_for(21) == "8.5" and min_gradle_for(17) == "7.3"
     w = tmp_path / "proj" / "gradle" / "wrapper"
     w.mkdir(parents=True)
