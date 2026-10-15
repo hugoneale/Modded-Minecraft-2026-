@@ -1,6 +1,6 @@
 # Builds the standalone Windows app (Modsmith.exe) with PyInstaller.
 #  - every push that touches Modsmith: test, build, smoke-test, upload as a workflow artifact
-#  - pushes to main: also publish it as the "latest" release, so
+#  - pushes to main: also publish it (with 16MARSHALST.zip) as the "latest" release, so
 #    https://github.com/<owner>/<repo>/releases/latest/download/Modsmith.exe always works
 #  - tags v*: publish a versioned release
 name: Build Modsmith.exe
@@ -34,7 +34,7 @@ jobs:
 
       - name: Run tests
         working-directory: modsmith
-        run: python -m pytest -q
+        run: python -X warn_default_encoding -m pytest -q -W error::EncodingWarning
 
       - name: Build Modsmith.exe
         working-directory: modsmith
@@ -59,6 +59,23 @@ jobs:
           path: modsmith/dist/Modsmith.exe
           if-no-files-found: error
 
+      - name: Write release notes
+        if: github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/v')
+        shell: bash
+        run: |
+          cat > notes.md <<EOF
+          ## Downloads
+
+          - **Modsmith.exe**: the Modsmith app for Windows. One file with no install and no Python needed; double-click it. The 16MARSHAL pack is built in.
+          - **16MARSHALST.zip**: the 16MARSHAL modpack (Minecraft 1.20.1, Forge). Import it into the CurseForge app, Prism Launcher, ATLauncher or MultiMC.
+
+          How to use Modsmith, with screenshots: https://github.com/${GITHUB_REPOSITORY}#how-to-use-modsmith
+
+          > The first time you open Modsmith.exe, Windows SmartScreen may say "Windows protected your PC" because the app isn't code-signed. Click **More info**, then **Run anyway**.
+
+          Built from ${GITHUB_SHA::7}.
+          EOF
+
       - name: Publish latest release
         if: github.ref == 'refs/heads/main'
         shell: bash
@@ -66,10 +83,9 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           gh release delete modsmith-latest --cleanup-tag --yes || true
-          gh release create modsmith-latest modsmith/dist/Modsmith.exe \
+          gh release create modsmith-latest modsmith/dist/Modsmith.exe 16MARSHALST.zip \
             --target "$GITHUB_SHA" --latest \
-            --title "Modsmith for Windows (latest build)" \
-            --notes "Download **Modsmith.exe** below and double-click it. No Python or install needed. Built from ${GITHUB_SHA::7}. If Windows SmartScreen says it protected your PC, click **More info** -> **Run anyway** (the app isn't code-signed)."
+            --title "Modsmith for Windows + 16MARSHAL modpack (latest)" --notes-file notes.md
 
       - name: Publish versioned release
         if: startsWith(github.ref, 'refs/tags/v')
@@ -77,5 +93,5 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          gh release create "$GITHUB_REF_NAME" modsmith/dist/Modsmith.exe --latest \
-            --title "Modsmith $GITHUB_REF_NAME" --generate-notes
+          gh release create "$GITHUB_REF_NAME" modsmith/dist/Modsmith.exe 16MARSHALST.zip --latest \
+            --title "Modsmith $GITHUB_REF_NAME" --notes-file notes.md

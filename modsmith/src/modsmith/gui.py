@@ -309,21 +309,26 @@ class App:
                           ("16MARSHAL pack", self._load_bundled_pack), ("Open list...", self._open_config),
                           ("Save list...", self._save_config)):
             ttk.Button(bar, text=text, command=cmd).pack(side="left", padx=2)
-        for text, cmd in (("Remove", self._remove), ("None", lambda: self._check_all(False)),
-                          ("All", lambda: self._check_all(True))):
-            ttk.Button(bar, text=text, command=cmd).pack(side="right", padx=2)
+
+        pick = ttk.Frame(self.root)
+        pick.pack(fill="x", padx=pad["padx"], pady=(0, pad["pady"]))
+        ttk.Label(pick, text="Filter").pack(side="left")
         self.filter_var = tk.StringVar()
         self.filter_var.trace_add("write", lambda *_: self._apply_filter())
-        ttk.Entry(bar, textvariable=self.filter_var, width=22).pack(side="right", padx=(4, 10))
-        ttk.Label(bar, text="Filter", style="Muted.TLabel").pack(side="right")
+        ttk.Entry(pick, textvariable=self.filter_var, width=32).pack(side="left", padx=(6, 10))
+        for text, cmd in (("Select all", lambda: self._check_all(True)), ("Select none", lambda: self._check_all(False)),
+                          ("Remove", self._remove)):
+            ttk.Button(pick, text=text, command=cmd).pack(side="left", padx=2)
+        self.count_var = tk.StringVar(value="")
+        ttk.Label(pick, textvariable=self.count_var, style="Muted.TLabel").pack(side="right")
 
         mid = ttk.PanedWindow(self.root, orient="vertical")
         mid.pack(fill="both", expand=True, **pad)
         tree_frame = ttk.Frame(mid)
         cols = ("use", "name", "spec", "current", "status", "build", "content")
         self.tree = ttk.Treeview(tree_frame, columns=cols, show="headings", selectmode="extended")
-        for c, text, w in (("use", "Use", 44), ("name", "Mod", 240), ("spec", "Id", 170),
-                           ("current", "Current", 120), ("status", "Status", 190),
+        for c, text, w in (("use", "Use", 44), ("name", "Mod", 250), ("spec", "Id", 150),
+                           ("current", "Current", 120), ("status", "Status", 235),
                            ("build", "Build for target", 200), ("content", "Content check", 240)):
             self.tree.heading(c, text=text, command=lambda c=c: self._sort(c))
             self.tree.column(c, width=int(w * s), anchor="center" if c == "use" else "w",
@@ -363,8 +368,6 @@ class App:
         self.progress = ttk.Progressbar(actions, mode="determinate", length=int(240 * s),
                                         style="Ember.Horizontal.TProgressbar")
         self.progress.pack(side="right", padx=4)
-        self.count_var = tk.StringVar(value="")
-        ttk.Label(actions, textvariable=self.count_var, style="Muted.TLabel").pack(side="right", padx=8)
         self.status_var = tk.StringVar(value="Add mods with '+ Add mods', 'Scan folder' or 'Import pack', "
                                              "pick a Minecraft version, then press Check.")
         ttk.Label(self.root, textvariable=self.status_var, anchor="w", style="Status.TLabel").pack(fill="x")
@@ -738,7 +741,8 @@ class App:
             build = r.output_jar.name
         content = ""
         if r.feature_diff:
-            content = ("all %d kept" % r.feature_diff.baseline_total if r.feature_diff.is_lossless
+            content = ("nothing to compare" if not r.feature_diff.baseline_total
+                       else "all %d kept" % r.feature_diff.baseline_total if r.feature_diff.is_lossless
                        else f"{r.feature_diff.missing_count} missing of {r.feature_diff.baseline_total}")
         current = r.current.version if r.current else (r.current_remote.version_number if r.current_remote else "")
         self.tree.item(iid, values=("[x]" if self.rows[iid]["checked"] else "[ ]", r.name or r.ref.ident,
@@ -818,7 +822,7 @@ class AddModsDialog:
         self.q: "queue.Queue[tuple]" = queue.Queue()
         self.results: dict[str, object] = {}
         w = self.win = _toplevel(app.root, "Add mods")
-        w.geometry(f"{int(820 * app.scale)}x{int(520 * app.scale)}")
+        w.geometry(f"{int(840 * app.scale)}x{int(600 * app.scale)}")
         f = ttk.Frame(w, padding=12)
         f.pack(fill="both", expand=True)
 

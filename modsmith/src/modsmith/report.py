@@ -33,9 +33,9 @@ def write(results: list[ModResult], issues: list[DependencyIssue], target: Targe
         "summary": {k.value: v for k, v in Counter(r.status for r in results).items()},
         "mods": [r.to_json() for r in results],
         "dependency_issues": [i.__dict__ for i in issues],
-    }, indent=1, default=str))
+    }, indent=1, default=str), encoding="utf-8")
     md = out_dir / "report.md"
-    md.write_text(markdown(results, issues, target))
+    md.write_text(markdown(results, issues, target), encoding="utf-8")
     return md
 
 

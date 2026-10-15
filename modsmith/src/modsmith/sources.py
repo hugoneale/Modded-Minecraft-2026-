@@ -50,7 +50,7 @@ def is_redistributable(license_id: Optional[str]) -> bool:
 
 
 def _git(*args: str, cwd: Optional[Path] = None, timeout: int = 600) -> str:
-    r = subprocess.run(["git", *args], cwd=cwd, capture_output=True, text=True, timeout=timeout)
+    r = subprocess.run(["git", *args], cwd=cwd, capture_output=True, text=True, encoding="utf-8", errors="replace", timeout=timeout)
     if r.returncode != 0:
         raise RuntimeError(f"git {' '.join(args)} failed: {r.stderr.strip()[:500]}")
     return r.stdout

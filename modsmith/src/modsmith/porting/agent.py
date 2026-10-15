@@ -45,7 +45,7 @@ def _run(cmd, workdir: Path, env: Optional[dict], log_file: Optional[Path], time
          stdin: Optional[str] = None, shell: bool = False) -> AgentRun:
     full_env = {**os.environ, **(env or {})}
     try:
-        r = subprocess.run(cmd, cwd=workdir, input=stdin, capture_output=True, text=True,
+        r = subprocess.run(cmd, cwd=workdir, input=stdin, capture_output=True, text=True, encoding="utf-8", errors="replace",
                            timeout=timeout, env=full_env, shell=shell)
         out, ok = r.stdout + ("\n" + r.stderr if r.stderr else ""), r.returncode == 0
     except subprocess.TimeoutExpired:

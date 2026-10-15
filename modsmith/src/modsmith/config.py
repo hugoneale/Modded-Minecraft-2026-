@@ -109,7 +109,7 @@ def _ref(entry) -> ModRef:
 
 
 def load(path: Path) -> Settings:
-    data = tomllib.loads(Path(path).read_text())
+    data = tomllib.loads(Path(path).read_text(encoding="utf-8"))
     s = Settings()
     names = {f.name for f in fields(Settings)}
     for k, v in data.items():
@@ -168,7 +168,7 @@ def dump(s: Settings, path: Path) -> None:
         else:
             lines.append(f"  {_toml_value(r.spec)},")
     lines.append("]")
-    Path(path).write_text("\n".join(lines) + "\n")
+    Path(path).write_text("\n".join(lines) + "\n", encoding="utf-8")
 
 
 # --------------------------------------------------------------------- imports
@@ -202,10 +202,10 @@ def import_curseforge_pack(path: Path) -> PackImport:
             if "modlist.html" in zf.namelist():
                 modlist = zf.read("modlist.html").decode("utf-8", "replace")
     else:
-        manifest = json.loads(path.read_text())
+        manifest = json.loads(path.read_text(encoding="utf-8"))
         side = path.with_name("modlist.html")
         if side.exists():
-            modlist = side.read_text(errors="replace")
+            modlist = side.read_text(encoding="utf-8", errors="replace")
     entries = re.findall(r'curseforge\.com/minecraft/mc-mods/([\w-]+)"?[^>]*>([^<]*)<', modlist)
     slugs = [slug for slug, _ in entries]
     names = {slug: re.sub(r"\s*\(by [^)]*\)\s*$", "", html.unescape(text)).strip() for slug, text in entries}
