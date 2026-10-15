@@ -266,3 +266,12 @@ def test_wildcard_branches():
     assert match_branch(br, "1.20.2") == "1.20.2"
     assert match_branch(["main", "1.21"], "1.21.1") == "1.21"
     assert match_branch(["main", "26.x"], "26.3") is None or True
+
+
+def test_mixins_counted(tmp_path):
+    old = make_jar(tmp_path / "a.jar", {"assets/m/lang/en_us.json": {},
+        "m.mixins.json": {"package": "a.b", "mixins": ["MixinLivingEntity", "sub.MixinPlayer"], "client": ["MixinGui"]}})
+    new = make_jar(tmp_path / "b.jar", {"assets/m/lang/en_us.json": {},
+        "m.mixins.json": {"package": "x.y", "mixins": ["MixinLivingEntity", "MixinPlayer"]}, "m.refmap.json": {}})
+    d = diff_features(extract_features(old), extract_features(new))
+    assert d.missing == {"mixins": ["MixinGui"]}

@@ -10,6 +10,8 @@ assets, which describe what a mod registers independently of code:
 * recipes, loot tables, advancements, worldgen, structures, tags, damage types
   from ``data/<namespace>/<kind>/``
 * config option keys from bundled default config files when present
+* mixins (code hooks into Minecraft) declared in ``*.mixins.json``, so code-only
+  mods are covered too
 
 Minecraft renamed several data folders in 1.21 (``recipes`` -> ``recipe``,
 ``loot_tables`` -> ``loot_table``...) and moved item models to ``items/`` in
@@ -168,7 +170,20 @@ def extract_features(jar: Path, namespaces: Optional[Iterable[str]] = None) -> F
                 category = _DATA_FOLDERS.get(m.group(2))
                 if category:
                     fs.add(category, f"{m.group(1)}:{m.group(3)}")
-    # Lang-derived "sounds" entries are subtitles; keep only the sounds.json ids.
+        # Code-level hooks: every mixin a mod declares. Package moves are
+        # common in ports, so only the class's simple name is compared.
+        for raw in names:
+            if raw.count("/") == 0 and raw.endswith(".json") and "mixins" in raw and "refmap" not in raw:
+                try:
+                    cfg = json.loads(zf.read(raw))
+                except (json.JSONDecodeError, UnicodeDecodeError):
+                    continue
+                if not isinstance(cfg, dict):
+                    continue
+                for key in ("mixins", "client", "server"):
+                    for cls in cfg.get(key) or []:
+                        if isinstance(cls, str):
+                            fs.add("mixins", cls.rsplit(".", 1)[-1])
     return fs
 
 

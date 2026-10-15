@@ -116,6 +116,15 @@ def port(*, workdir: Path, name: str, mod_id: str, from_mc: str, from_loader: st
         diff = diff_features(baseline, candidate)
         (meta / "feature-diff.json").write_text(json.dumps(
             {"missing": diff.missing, "added": diff.added}, indent=1))
+        notes_path = meta / "PORT_NOTES.md"
+        explained = notes_path.read_text(errors="replace") if notes_path.exists() else ""
+        if diff.missing.get("mixins"):
+            # A mixin replaced by an equivalent loader API is fine if the agent says so.
+            still = [m for m in diff.missing["mixins"] if m not in explained]
+            if still:
+                diff.missing["mixins"] = still
+            else:
+                del diff.missing["mixins"]
         result.diff, result.jar = diff, jar
         if diff.is_lossless:
             result.ok = True

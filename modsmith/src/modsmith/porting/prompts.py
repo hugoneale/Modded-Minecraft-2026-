@@ -20,6 +20,8 @@ Reference material (fetch what you need):
   singular (recipes->recipe, loot_tables->loot_table, tags/blocks->tags/block, ...);
   1.21.2+: recipe/rendering changes; 1.21.4+: item model definitions in assets/<ns>/items/.
 - 26.1+: Minecraft is no longer obfuscated (no mappings needed) and requires Java 25.
+- Gradle must support the JDK it runs on: Java 21 needs Gradle 8.5+, Java 25 needs
+  Gradle 9.1+ (update gradle/wrapper/gradle-wrapper.properties and the loader plugin).
 """
 
 
@@ -34,6 +36,8 @@ NON-NEGOTIABLE RULES
    compat module or event handler just to make the build pass. If a Minecraft or loader
    API was removed, reimplement the same behaviour with the new API.
 3. Keep config option names and defaults the same so existing config files keep working.
+   A mixin may be dropped only when an equivalent loader API now does the same job;
+   name the mixin class and its replacement in .modsmith/PORT_NOTES.md.
 4. Optional integrations with other mods may be disabled only if that other mod has no
    build for the target version; note each one in .modsmith/PORT_NOTES.md.
 5. Do not add new gameplay features.
