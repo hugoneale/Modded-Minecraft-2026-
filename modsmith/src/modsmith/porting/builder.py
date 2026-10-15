@@ -155,3 +155,51 @@ def run_gradle(project: Path, java_home: Optional[Path], tasks: list[str] = None
         Path(log_file).write_text(log)
     return BuildResult(ok=ok, log=log, errors=[] if ok else extract_errors(log),
                        jars=output_jars(project, loader) if ok else [], timed_out=timed_out)
+
+
+# Oldest Gradle that can run on each JDK.
+_MIN_GRADLE = [(25, "9.1.0"), (24, "8.14"), (23, "8.10"), (21, "8.5"), (17, "7.3"), (16, "7.0"), (8, "6.0")]
+GRADLE_FALLBACK = "9.8.1"
+
+
+def min_gradle_for(java: int) -> str:
+    for major, ver in _MIN_GRADLE:
+        if java >= major:
+            return ver
+    return "6.0"
+
+
+def wrapper_version(project: Path) -> Optional[str]:
+    props = Path(project) / "gradle" / "wrapper" / "gradle-wrapper.properties"
+    if not props.exists():
+        return None
+    m = re.search(r"gradle-([\d.]+(?:-rc-\d+)?)-(?:bin|all)\.zip", props.read_text(errors="replace"))
+    return m.group(1) if m else None
+
+
+def ensure_wrapper(project: Path, java: int, latest: Optional[str] = None) -> Optional[str]:
+    """Make sure the project's Gradle wrapper can run on ``java``. Coding agents
+    are often not allowed to touch wrapper files, so Modsmith does it. Returns
+    the new version when it changed something."""
+    from ..versions import Version
+    project = Path(project)
+    need = min_gradle_for(java)
+    current = wrapper_version(project)
+    if current and Version(current) >= Version(need):
+        return None
+    new = latest or GRADLE_FALLBACK
+    if Version(new) < Version(need):
+        new = need
+    props = project / "gradle" / "wrapper" / "gradle-wrapper.properties"
+    props.parent.mkdir(parents=True, exist_ok=True)
+    url = f"https\\://services.gradle.org/distributions/gradle-{new}-bin.zip"
+    if props.exists():
+        text = props.read_text(errors="replace")
+        text = re.sub(r"^distributionUrl=.*$", f"distributionUrl={url}", text, flags=re.M)
+        # The old checksum (if pinned) no longer matches the new distribution.
+        text = re.sub(r"^distributionSha256Sum=.*\n?", "", text, flags=re.M)
+    else:
+        text = ("distributionBase=GRADLE_USER_HOME\ndistributionPath=wrapper/dists\n"
+                f"distributionUrl={url}\nzipStoreBase=GRADLE_USER_HOME\nzipStorePath=wrapper/dists\n")
+    props.write_text(text)
+    return new

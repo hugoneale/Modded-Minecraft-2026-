@@ -439,7 +439,8 @@ class Modsmith:
                    from_loader=from_loader, target=t, baseline=bfs, agent=agent,
                    java_homes=self.s.java_home, max_attempts=self.s.max_port_attempts,
                    build_timeout=self.s.build_timeout, decompiled=decompiled,
-                   ref_note=checkout.note if checkout else "decompiled from jar", log=self.log)
+                   ref_note=checkout.note if checkout else "decompiled from jar", log=self.log,
+                   gradle_version=self._latest_gradle())
         r.notes.extend(res.notes)
         if res.ok and res.jar:
             name = f"{_safe(r.mod_id)}-{base.version}-mc{t.minecraft}-{t.loader}-modsmith.jar"
@@ -455,6 +456,12 @@ class Modsmith:
         if res.diff is not None and res.jar:
             r.notes.append("Partial port: " + describe_diff(res.diff))
         return self._fallback(r, fallback_official)
+
+    def _latest_gradle(self) -> Optional[str]:
+        try:
+            return self.http.get_json("https://services.gradle.org/versions/current")["version"]
+        except Exception:  # noqa: BLE001
+            return None
 
     def _fallback(self, r: ModResult, official_jar: Optional[Path]) -> ModResult:
         if official_jar and self.s.feature_policy == "prefer-port":

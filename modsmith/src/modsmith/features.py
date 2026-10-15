@@ -79,6 +79,7 @@ _ITEM_MODEL = re.compile(r"^assets/([^/]+)/(?:models/item|items)/(.+)\.json$")
 _LANG = re.compile(r"^assets/([^/]+)/lang/en_us\.json$")
 _SOUNDS = re.compile(r"^assets/([^/]+)/sounds\.json$")
 _OVERLAY = re.compile(r"^(?!assets/|data/|META-INF/)[^/]+/(?=(?:assets|data)/)")
+_PLATFORM_NAMESPACES = {"minecraft", "c", "forge", "neoforge", "fabric"}
 _IGNORED_NAMESPACES = {"minecraft", "c", "forge", "neoforge", "fabric", "curios", "trinkets"}
 
 
@@ -170,6 +171,9 @@ def extract_features(jar: Path, namespaces: Optional[Iterable[str]] = None) -> F
                 category = _DATA_FOLDERS.get(m.group(2))
                 if category:
                     fs.add(category, f"{m.group(1)}:{m.group(3)}")
+            elif m and m.group(1) not in _PLATFORM_NAMESPACES and m.group(2) != "tags":
+                # Data the mod provides to *other* mods (Curios slots, JEI, Patchouli books...).
+                fs.add("integration_data", f"{m.group(1)}/{m.group(2)}/{m.group(3)}")
         # Code-level hooks: every mixin a mod declares. Package moves are
         # common in ports, so only the class's simple name is compared.
         for raw in names:

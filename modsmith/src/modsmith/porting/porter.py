@@ -23,9 +23,10 @@ from ..platform import TargetInfo
 from ..versions import loader_aliases, satisfies
 from . import prompts
 from .agent import Agent
-from .builder import find_java, run_gradle
+from .builder import ensure_wrapper, find_java, run_gradle
 
 Log = Callable[[str], None]
+SOFT_CATEGORIES = ("mixins", "integration_data")
 
 
 @dataclass
@@ -65,7 +66,7 @@ def check_metadata(jar: Path, target: TargetInfo) -> Optional[str]:
 def port(*, workdir: Path, name: str, mod_id: str, from_mc: str, from_loader: str,
          target: TargetInfo, baseline: FeatureSet, agent: Agent, java_homes: dict,
          max_attempts: int = 6, build_timeout: int = 1800, decompiled: bool = False,
-         ref_note: str = "", log: Log = print) -> PortResult:
+         ref_note: str = "", log: Log = print, gradle_version: Optional[str] = None) -> PortResult:
     workdir = Path(workdir)
     meta = workdir / ".modsmith"
     meta.mkdir(parents=True, exist_ok=True)
@@ -84,6 +85,10 @@ def port(*, workdir: Path, name: str, mod_id: str, from_mc: str, from_loader: st
         log(f"  ! {result.notes[-1]}")
         return result
     env = {"JAVA_HOME": str(java)}
+    bumped = ensure_wrapper(workdir, target.java, gradle_version)
+    if bumped:
+        log(f"  set Gradle wrapper to {bumped} (needed for Java {target.java})")
+        _snapshot(workdir, f"modsmith: Gradle wrapper {bumped}")
 
     ok, why = agent.available()
     if not ok:
@@ -99,6 +104,9 @@ def port(*, workdir: Path, name: str, mod_id: str, from_mc: str, from_loader: st
         agent.run(prompt, workdir, env=env, log_file=agent_log)
         _snapshot(workdir, f"modsmith: agent pass {attempt}")
 
+        bumped = ensure_wrapper(workdir, target.java, gradle_version)
+        if bumped:
+            log(f"  set Gradle wrapper to {bumped} (needed for Java {target.java})")
         log("  building...")
         build = run_gradle(workdir, java, timeout=build_timeout, loader=target.loader,
                            log_file=meta / "build.log")
@@ -118,13 +126,15 @@ def port(*, workdir: Path, name: str, mod_id: str, from_mc: str, from_loader: st
             {"missing": diff.missing, "added": diff.added}, indent=1))
         notes_path = meta / "PORT_NOTES.md"
         explained = notes_path.read_text(errors="replace") if notes_path.exists() else ""
-        if diff.missing.get("mixins"):
-            # A mixin replaced by an equivalent loader API is fine if the agent says so.
-            still = [m for m in diff.missing["mixins"] if m not in explained]
-            if still:
-                diff.missing["mixins"] = still
-            else:
-                del diff.missing["mixins"]
+        for soft in SOFT_CATEGORIES:
+            # e.g. a mixin replaced by an equivalent loader API, or compat data whose
+            # format changed upstream: acceptable when the agent explains it.
+            if diff.missing.get(soft):
+                still = [m for m in diff.missing[soft] if m.rsplit("/", 1)[-1].split(":")[-1] not in explained]
+                if still:
+                    diff.missing[soft] = still
+                else:
+                    del diff.missing[soft]
         result.diff, result.jar = diff, jar
         if diff.is_lossless:
             result.ok = True

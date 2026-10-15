@@ -275,3 +275,21 @@ def test_mixins_counted(tmp_path):
         "m.mixins.json": {"package": "x.y", "mixins": ["MixinLivingEntity", "MixinPlayer"]}, "m.refmap.json": {}})
     d = diff_features(extract_features(old), extract_features(new))
     assert d.missing == {"mixins": ["MixinGui"]}
+
+
+def test_integration_data_and_wrapper(tmp_path):
+    from modsmith.porting.builder import ensure_wrapper, min_gradle_for, wrapper_version
+    j = make_jar(tmp_path / "c.jar", {"assets/charm/lang/en_us.json": {},
+                                      "data/curios/entities/charm.json": {}, "data/curios/tags/items/charm.json": {}})
+    fs = extract_features(j)
+    assert fs.categories["integration_data"] == {"curios/entities/charm"}
+    assert min_gradle_for(25) == "9.1.0" and min_gradle_for(21) == "8.5" and min_gradle_for(17) == "7.3"
+    w = tmp_path / "proj" / "gradle" / "wrapper"
+    w.mkdir(parents=True)
+    (w / "gradle-wrapper.properties").write_text(
+        "distributionUrl=https\\://services.gradle.org/distributions/gradle-8.8-bin.zip\ndistributionSha256Sum=abc\n")
+    assert ensure_wrapper(tmp_path / "proj", 25, "9.8.1") == "9.8.1"
+    assert wrapper_version(tmp_path / "proj") == "9.8.1"
+    assert "Sha256" not in (w / "gradle-wrapper.properties").read_text()
+    assert ensure_wrapper(tmp_path / "proj", 25, "9.8.1") is None
+    assert ensure_wrapper(tmp_path / "proj", 21) is None
