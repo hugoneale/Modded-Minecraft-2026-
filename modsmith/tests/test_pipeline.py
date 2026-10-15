@@ -164,7 +164,7 @@ class ScriptedAgent(Agent):
 
     def run(self, prompt, workdir, env=None, log_file=None, timeout=0):
         self.prompts.append(prompt)
-        (Path(workdir) / "pass.txt").write_text(str(len(self.prompts)))
+        (Path(workdir) / "pass.txt").write_text(str(len(self.prompts)), encoding="utf-8")
         return AgentRun(True, "ok")
 
 

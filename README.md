@@ -9,13 +9,72 @@ A 221-mod kitchen-sink pack (Create, Mekanism, AE2, Tinkers, Ice and Fire, Alex'
 | Recommended RAM | 8 GB+ |
 | Mods | 221 (see [MODLIST.md](MODLIST.md)) |
 
-## ⬇️ Download
+## ⬇️ Downloads
 
-**[Download 16MARSHALST.zip](https://github.com/hugoneale/Modded-Minecraft-2026-/raw/main/16MARSHALST.zip)**
+<table>
+<tr>
+<td align="center" width="50%">
 
-This is a CurseForge-format modpack zip (about 0.8 MB). It contains a manifest, configs and scripts. The mod `.jar` files aren't inside it: your launcher downloads them automatically from CurseForge when you import the zip.
+### 📦 The modpack
+
+<a href="https://github.com/hugoneale/Modded-Minecraft-2026-/raw/main/16MARSHALST.zip"><img alt="Download 16MARSHALST.zip" src="https://img.shields.io/badge/Download-16MARSHALST.zip-2ea043?style=for-the-badge&logo=curseforge&logoColor=white"></a>
+
+CurseForge modpack zip · Minecraft 1.20.1 · Forge<br>
+Import it into the CurseForge app, Prism, ATLauncher or MultiMC (see [Setup](#setup)).
+
+</td>
+<td align="center" width="50%">
+
+### ⚒️ Modsmith app (Windows)
+
+<a href="https://github.com/hugoneale/Modded-Minecraft-2026-/releases/latest/download/Modsmith.exe"><img alt="Download Modsmith.exe" src="https://img.shields.io/badge/Download-Modsmith.exe-ff7b1c?style=for-the-badge&logo=windows&logoColor=white"></a>
+
+One file, no install, no Python needed. Double-click it.<br>
+Comes with this pack built in, ready to update or port to any Minecraft version.
+
+</td>
+</tr>
+</table>
+
+Both files are also on the [Releases page](https://github.com/hugoneale/Modded-Minecraft-2026-/releases/latest).
+
+> **Windows SmartScreen:** the first time you open `Modsmith.exe`, Windows may say "Windows protected your PC" because the app isn't code-signed. Click **More info**, then **Run anyway**.
+
+## How to use Modsmith
+
+Modsmith installs, updates and checks the mods for any Minecraft version you choose. It can also port mods that haven't been updated yet.
+
+**1. Open it.** The 16MARSHAL pack's 221 mods are already on the workbench. Pick the **Minecraft** version and **Loader** you want at the top. The default is the latest release with NeoForge. Your **Mods folder** defaults to the Minecraft launcher's `.minecraft\mods`; use **Browse...** to choose another, such as a Prism or CurseForge instance's `mods` folder.
+
+![Modsmith with the 16MARSHAL pack loaded](docs/screenshots/01-start.png)
+
+**2. Choose your mods.** Click `[x]` to untick a mod you don't want, or select several rows and press **Space**. Type in **Filter** to find mods in the long list. **Select all**, **Select none** and **Remove** work on what the filter shows.
+
+![Filtering and unticking mods](docs/screenshots/03-choose.png)
+
+**3. Add more mods.** Click **+ Add mods...**, search Modrinth (or CurseForge, with an API key in Settings) by name, select results and press **Add selected**. The *Has 1.21.1?* column shows whether a mod already has a build for your chosen version. You can also paste ids like `modrinth:jei` or `curseforge:238222`.
+
+![Searching for mods to add](docs/screenshots/02-add-mods.png)
+
+**4. Press "1. Check".** Nothing is changed yet. Modsmith finds the right build of every ticked mod for your version, adds missing dependencies, and downloads each build to compare its content (items, blocks, recipes, worldgen…) with the version you have now. The hammer works the anvil while it runs.
+
+![Checking mods: the hammer strikes while Modsmith works](docs/screenshots/05-forging.png)
+
+**5. Read the results.** Green or blue means there's an official build with all your content. Orange means there's a build, but some content is missing (double-click the row to see exactly what), or there's no build yet. Red means it failed or no source code was found. **Open report** shows the full table.
+
+![Check results](docs/screenshots/04-check.png)
+
+**6. Press "2. Forge it! (Install / Update)"** to download the builds into your mods folder. Jars being replaced are backed up to `mods\.modsmith-backup\<date>\`. **3. Force port missing** rebuilds mods that have no official build from their source code with an AI coding agent (it needs a JDK; see [modsmith/README.md](modsmith/README.md)).
+
+**Settings** controls beta builds, the content check, automatic dependencies, your CurseForge API key (free from [console.curseforge.com](https://console.curseforge.com)) and porting.
+
+![Settings](docs/screenshots/06-settings.png)
+
+Your mod list and settings are saved when you close the app and come back next time.
 
 ## Setup
+
+`16MARSHALST.zip` is a CurseForge-format modpack (about 0.8 MB). It holds the manifest, configs, KubeJS scripts and resource packs. The mod `.jar` files aren't inside it: your launcher downloads them automatically from CurseForge when you import the zip.
 
 ### CurseForge app (easiest)
 1. Install the [CurseForge app](https://www.curseforge.com/download/app) and open **Minecraft**.
@@ -45,9 +104,10 @@ The [`modsmith/`](modsmith/) folder contains **Modsmith**, a desktop app that:
 - otherwise **force-ports** the mod from its source code with an AI coding agent, accepting the result only if it builds and keeps every item, block, recipe and worldgen feature
 - optionally (with a warning) decompiles mods that have no public source
 
-**[Download Modsmith (repository ZIP)](https://github.com/hugoneale/Modded-Minecraft-2026-/archive/refs/heads/main.zip)**, unzip it, then run `modsmith/run-modsmith.bat` (Windows), `run-modsmith.command` (macOS) or `run-modsmith.sh` (Linux). See [modsmith/README.md](modsmith/README.md) for details.
+**Windows: [download Modsmith.exe](https://github.com/hugoneale/Modded-Minecraft-2026-/releases/latest/download/Modsmith.exe)** and double-click it. It comes with this pack built in; see [How to use Modsmith](#how-to-use-modsmith).
+On macOS or Linux, **[download the repository ZIP](https://github.com/hugoneale/Modded-Minecraft-2026-/archive/refs/heads/main.zip)**, unzip it, then run `modsmith/run-modsmith.bat` (Windows), `run-modsmith.command` (macOS) or `run-modsmith.sh` (Linux). See [modsmith/README.md](modsmith/README.md) for details.
 
-To check this pack against the latest version, use **Import pack** with `16MARSHALST.zip`, then click **Check**.
+To check this pack against another version, open Modsmith (the pack loads automatically, or click **16MARSHAL pack**), pick the version, then click **Check**.
 
 ## About updating to Minecraft 26.x
 

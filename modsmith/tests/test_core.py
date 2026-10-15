@@ -160,7 +160,7 @@ def test_config_roundtrip(tmp_path):
                               ModRef("sodium", enabled=False), ModRef("jade", hint="Jade 🔍 \"quoted\"")])
     p = tmp_path / "modsmith.toml"
     config.dump(s, p)
-    assert "secret" not in p.read_text()
+    assert "secret" not in p.read_text(encoding="utf-8")
     loaded = config.load(p)
     assert loaded.minecraft == "26.3" and loaded.allow_decompile
     assert loaded.java_home == {"25": "C:\\jdk\\25"}
@@ -290,9 +290,9 @@ def test_integration_data_and_wrapper(tmp_path):
     w = tmp_path / "proj" / "gradle" / "wrapper"
     w.mkdir(parents=True)
     (w / "gradle-wrapper.properties").write_text(
-        "distributionUrl=https\\://services.gradle.org/distributions/gradle-8.8-bin.zip\ndistributionSha256Sum=abc\n")
+        "distributionUrl=https\\://services.gradle.org/distributions/gradle-8.8-bin.zip\ndistributionSha256Sum=abc\n", encoding="utf-8")
     assert ensure_wrapper(tmp_path / "proj", 25, "9.8.1") == "9.8.1"
     assert wrapper_version(tmp_path / "proj") == "9.8.1"
-    assert "Sha256" not in (w / "gradle-wrapper.properties").read_text()
+    assert "Sha256" not in (w / "gradle-wrapper.properties").read_text(encoding="utf-8")
     assert ensure_wrapper(tmp_path / "proj", 25, "9.8.1") is None
     assert ensure_wrapper(tmp_path / "proj", 21) is None

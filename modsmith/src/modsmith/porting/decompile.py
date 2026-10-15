@@ -52,7 +52,7 @@ def decompile_to_project(jar: JarInfo, workdir: Path, vineflower: Path, java: Op
     tmp.mkdir(parents=True)
     java_bin = str(Path(java) / "bin" / "java") if java else "java"
     r = subprocess.run([java_bin, "-jar", str(vineflower), "-dgs=1", "-rsy=1", "-ind=    ",
-                        str(jar.path), str(tmp)], capture_output=True, text=True, timeout=3600)
+                        str(jar.path), str(tmp)], capture_output=True, text=True, encoding="utf-8", errors="replace", timeout=3600)
     if r.returncode != 0:
         raise RuntimeError(f"Vineflower failed: {r.stderr[-1000:]}")
     # Vineflower writes either a directory tree or a jar of sources.
@@ -80,5 +80,5 @@ def decompile_to_project(jar: JarInfo, workdir: Path, vineflower: Path, java: Op
             dest.parent.mkdir(parents=True, exist_ok=True)
             dest.write_bytes(zf.read(name))
     shutil.rmtree(tmp)
-    (workdir / "DECOMPILED.txt").write_text(DECOMPILE_WARNING + "\n\nOriginal: " + jar.path.name + "\n")
+    (workdir / "DECOMPILED.txt").write_text(DECOMPILE_WARNING + "\n\nOriginal: " + jar.path.name + "\n", encoding="utf-8")
     return workdir

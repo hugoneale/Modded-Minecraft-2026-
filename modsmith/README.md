@@ -14,6 +14,16 @@ Select mods ─► pick Minecraft version ─► check dependencies & versions
 
 ## Quick start
 
+### Windows: standalone app
+
+**[Download Modsmith.exe](https://github.com/hugoneale/Modded-Minecraft-2026-/releases/latest/download/Modsmith.exe)** and double-click it. It's a single file with nothing to install and no Python needed. It opens with the 16MARSHAL pack's 221 mods loaded, so you can start right away. Your list and settings are remembered between launches (in `%APPDATA%\modsmith`), and the default mods folder is `%APPDATA%\.minecraft\mods`.
+
+If Windows SmartScreen says "Windows protected your PC", click **More info**, then **Run anyway**. The app isn't code-signed.
+
+The `.exe` is built by GitHub Actions ([`.github/workflows/build-exe.yml`](../.github/workflows/build-exe.yml)) on every change to `main`. To build it yourself on Windows: `pip install pyinstaller`, then `python packaging/build.py` inside the `modsmith` folder, which writes `dist\Modsmith.exe`. The same script builds a native app on macOS or Linux, run on that OS.
+
+### Any OS: run from source
+
 1. Install **Python 3.11 or newer** from [python.org](https://www.python.org/downloads/). On Linux, also install Tk: `sudo apt install python3-tk`.
 2. Download this repository: **[Download ZIP](https://github.com/hugoneale/Modded-Minecraft-2026-/archive/refs/heads/main.zip)**. Unzip it and open the `modsmith` folder.
 3. Start the app:
@@ -24,10 +34,10 @@ Select mods ─► pick Minecraft version ─► check dependencies & versions
 Modsmith has no dependencies beyond Python's standard library. Checking and installing mods works straight away.
 
 ### In the app
-1. **Choose mods.** Use **Scan folder** (your current `mods` folder), **Add by ID** (`modrinth:jei`, `curseforge:238222`, or just `sodium`), **Import pack** (CurseForge `.zip` or Modrinth `.mrpack`), or **Open config** (a `modsmith.toml`). Tick the ones you want.
+1. **Choose mods.** Use **+ Add mods** (search Modrinth or CurseForge by name, or type ids such as `modrinth:jei`, `curseforge:238222` or just `sodium`), **Scan folder** (your current `mods` folder), **16MARSHAL pack** (the bundled pack), **Import pack** (CurseForge `.zip` or Modrinth `.mrpack`), or **Open list** (a `modsmith.toml`). Click a mod's `[x]` to untick it (or select rows and press Space), and type in **Filter** to find one in a long list.
 2. **Pick the Minecraft version and loader.** The list comes straight from Mojang. The default is the latest release; NeoForge is the default loader for modern versions.
 3. Click **1. Check** to see what's available. Nothing is changed yet.
-4. Click **2. Install / Update** to download official builds into the mods folder. Jars being replaced are moved to `mods/.modsmith-backup/<date>/`.
+4. Click **2. Forge it! (Install / Update)** to download official builds into the mods folder. Jars being replaced are moved to `mods/.modsmith-backup/<date>/`.
 5. Click **3. Force port missing** to port mods that have no official build (see below).
 6. **Open report** shows the full table. Double-click a row for its details: missing content, licence, source repository and warnings.
 

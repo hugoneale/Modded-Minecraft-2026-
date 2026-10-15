@@ -42,7 +42,7 @@ class PortResult:
 
 
 def _git(workdir: Path, *args: str) -> None:
-    subprocess.run(["git", *args], cwd=workdir, capture_output=True, text=True)
+    subprocess.run(["git", *args], cwd=workdir, capture_output=True, text=True, encoding="utf-8", errors="replace")
 
 
 def _snapshot(workdir: Path, message: str) -> None:
@@ -72,12 +72,12 @@ def port(*, workdir: Path, name: str, mod_id: str, from_mc: str, from_loader: st
     workdir = Path(workdir)
     meta = workdir / ".modsmith"
     meta.mkdir(parents=True, exist_ok=True)
-    (meta / "baseline-features.json").write_text(json.dumps(baseline.to_json(), indent=1))
-    (meta / "target.json").write_text(json.dumps(target.__dict__, indent=1))
+    (meta / "baseline-features.json").write_text(json.dumps(baseline.to_json(), indent=1), encoding="utf-8")
+    (meta / "target.json").write_text(json.dumps(target.__dict__, indent=1), encoding="utf-8")
     exclude = workdir / ".git" / "info" / "exclude"
     _snapshot(workdir, "modsmith: baseline before port")
     if exclude.parent.exists():
-        with open(exclude, "a") as f:
+        with open(exclude, "a", encoding="utf-8") as f:
             f.write("\n.modsmith/*.log\nbuild/\n.gradle/\n")
 
     java = find_java(target.java, java_homes)
@@ -133,9 +133,9 @@ def port(*, workdir: Path, name: str, mod_id: str, from_mc: str, from_loader: st
         candidate = extract_features(jar, namespaces=baseline_namespaces(baseline) or None)
         diff = diff_features(baseline, candidate)
         (meta / "feature-diff.json").write_text(json.dumps(
-            {"missing": diff.missing, "added": diff.added}, indent=1))
+            {"missing": diff.missing, "added": diff.added}, indent=1), encoding="utf-8")
         notes_path = meta / "PORT_NOTES.md"
-        explained = notes_path.read_text(errors="replace") if notes_path.exists() else ""
+        explained = notes_path.read_text(encoding="utf-8", errors="replace") if notes_path.exists() else ""
         for soft in SOFT_CATEGORIES:
             # e.g. a mixin replaced by an equivalent loader API, or compat data whose
             # format changed upstream: acceptable when the agent explains it.

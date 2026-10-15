@@ -86,7 +86,7 @@ class Http:
         key = url + "?" + json.dumps(params or {}, sort_keys=True)
         cp = self._cache_path(key) if cache else None
         if cp and cp.exists() and time.time() - cp.stat().st_mtime < self.cache_ttl:
-            return json.loads(cp.read_text())
+            return json.loads(cp.read_text(encoding="utf-8"))
         raw = self.request("GET", url, params=params, headers=headers)
         if cp:
             cp.parent.mkdir(parents=True, exist_ok=True)

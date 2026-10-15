@@ -19,6 +19,7 @@ import html
 import json
 import os
 import re
+import sys
 import tomllib
 import zipfile
 from dataclasses import dataclass, field, fields
@@ -28,6 +29,42 @@ from typing import Optional
 from .models import ModRef
 
 FEATURE_POLICIES = ("warn", "prefer-port", "strict")
+BUNDLED_PACK = "16MARSHALST.zip"
+
+
+def bundled_pack() -> Optional[Path]:
+    """The modpack shipped with the app: inside the PyInstaller bundle, or at
+    the repository root when running from source."""
+    here = Path(__file__).resolve().parents
+    roots = [Path(sys._MEIPASS)] if getattr(sys, "_MEIPASS", None) else []  # type: ignore[attr-defined]
+    if len(here) > 3:
+        roots.append(here[3])  # modsmith/src/modsmith/config.py -> repository root
+    return next((r / BUNDLED_PACK for r in roots if (r / BUNDLED_PACK).is_file()), None)
+
+
+def user_data_dir() -> Path:
+    """Where the desktop app remembers its last session."""
+    if os.name == "nt":
+        base = Path(os.environ.get("APPDATA", Path.home() / "AppData" / "Roaming"))
+    elif sys.platform == "darwin":
+        base = Path.home() / "Library" / "Application Support"
+    else:
+        base = Path(os.environ.get("XDG_CONFIG_HOME", Path.home() / ".config"))
+    return base / "modsmith"
+
+
+def minecraft_dir() -> Path:
+    """The vanilla launcher's game folder for this OS."""
+    if os.name == "nt":
+        return Path(os.environ.get("APPDATA", Path.home() / "AppData" / "Roaming")) / ".minecraft"
+    if sys.platform == "darwin":
+        return Path.home() / "Library" / "Application Support" / "minecraft"
+    return Path.home() / ".minecraft"
+
+
+def default_mods_dir() -> Path:
+    mc = minecraft_dir()
+    return mc / "mods" if mc.is_dir() else Path.home() / "Modsmith" / "mods"
 
 
 @dataclass
@@ -72,7 +109,7 @@ def _ref(entry) -> ModRef:
 
 
 def load(path: Path) -> Settings:
-    data = tomllib.loads(Path(path).read_text())
+    data = tomllib.loads(Path(path).read_text(encoding="utf-8"))
     s = Settings()
     names = {f.name for f in fields(Settings)}
     for k, v in data.items():
@@ -131,7 +168,7 @@ def dump(s: Settings, path: Path) -> None:
         else:
             lines.append(f"  {_toml_value(r.spec)},")
     lines.append("]")
-    Path(path).write_text("\n".join(lines) + "\n")
+    Path(path).write_text("\n".join(lines) + "\n", encoding="utf-8")
 
 
 # --------------------------------------------------------------------- imports
@@ -165,10 +202,10 @@ def import_curseforge_pack(path: Path) -> PackImport:
             if "modlist.html" in zf.namelist():
                 modlist = zf.read("modlist.html").decode("utf-8", "replace")
     else:
-        manifest = json.loads(path.read_text())
+        manifest = json.loads(path.read_text(encoding="utf-8"))
         side = path.with_name("modlist.html")
         if side.exists():
-            modlist = side.read_text(errors="replace")
+            modlist = side.read_text(encoding="utf-8", errors="replace")
     entries = re.findall(r'curseforge\.com/minecraft/mc-mods/([\w-]+)"?[^>]*>([^<]*)<', modlist)
     slugs = [slug for slug, _ in entries]
     names = {slug: re.sub(r"\s*\(by [^)]*\)\s*$", "", html.unescape(text)).strip() for slug, text in entries}

@@ -17,14 +17,14 @@ _SKIP_JAR = re.compile(r"-(sources|javadoc|dev|api|slim|all-sources|shadow-dev|d
 def java_major(home: Path) -> Optional[int]:
     rel = Path(home) / "release"
     if rel.exists():
-        m = re.search(r'JAVA_VERSION="(\d+)(?:\.(\d+))?', rel.read_text(errors="replace"))
+        m = re.search(r'JAVA_VERSION="(\d+)(?:\.(\d+))?', rel.read_text(encoding="utf-8", errors="replace"))
         if m:
             major = int(m.group(1))
             return int(m.group(2)) if major == 1 and m.group(2) else major
     java = Path(home) / "bin" / ("java.exe" if os.name == "nt" else "java")
     if java.exists():
         try:
-            out = subprocess.run([str(java), "-version"], capture_output=True, text=True, timeout=30).stderr
+            out = subprocess.run([str(java), "-version"], capture_output=True, text=True, encoding="utf-8", errors="replace", timeout=30).stderr
             m = re.search(r'version "(\d+)(?:\.(\d+))?', out)
             if m:
                 major = int(m.group(1))
@@ -140,7 +140,7 @@ def run_gradle(project: Path, java_home: Optional[Path], tasks: list[str] = None
         env["PATH"] = str(Path(java_home) / "bin") + os.pathsep + env.get("PATH", "")
         cmd.append(f"-Dorg.gradle.java.home={java_home}")
     try:
-        r = subprocess.run(cmd, cwd=project, capture_output=True, text=True, timeout=timeout, env=env)
+        r = subprocess.run(cmd, cwd=project, capture_output=True, text=True, encoding="utf-8", errors="replace", timeout=timeout, env=env)
         log = r.stdout + "\n" + r.stderr
         ok = r.returncode == 0
         timed_out = False
@@ -152,7 +152,7 @@ def run_gradle(project: Path, java_home: Optional[Path], tasks: list[str] = None
         ok, timed_out = False, False
     if log_file:
         Path(log_file).parent.mkdir(parents=True, exist_ok=True)
-        Path(log_file).write_text(log)
+        Path(log_file).write_text(log, encoding="utf-8")
     return BuildResult(ok=ok, log=log, errors=[] if ok else extract_errors(log),
                        jars=output_jars(project, loader) if ok else [], timed_out=timed_out)
 
@@ -173,7 +173,7 @@ def wrapper_version(project: Path) -> Optional[str]:
     props = Path(project) / "gradle" / "wrapper" / "gradle-wrapper.properties"
     if not props.exists():
         return None
-    m = re.search(r"gradle-([\d.]+(?:-rc-\d+)?)-(?:bin|all)\.zip", props.read_text(errors="replace"))
+    m = re.search(r"gradle-([\d.]+(?:-rc-\d+)?)-(?:bin|all)\.zip", props.read_text(encoding="utf-8", errors="replace"))
     return m.group(1) if m else None
 
 
@@ -194,14 +194,14 @@ def ensure_wrapper(project: Path, java: int, latest: Optional[str] = None) -> Op
     props.parent.mkdir(parents=True, exist_ok=True)
     url = f"https\\://services.gradle.org/distributions/gradle-{new}-bin.zip"
     if props.exists():
-        text = props.read_text(errors="replace")
+        text = props.read_text(encoding="utf-8", errors="replace")
         text = re.sub(r"^distributionUrl=.*$", f"distributionUrl={url}", text, flags=re.M)
         # The old checksum (if pinned) no longer matches the new distribution.
         text = re.sub(r"^distributionSha256Sum=.*\n?", "", text, flags=re.M)
     else:
         text = ("distributionBase=GRADLE_USER_HOME\ndistributionPath=wrapper/dists\n"
                 f"distributionUrl={url}\nzipStoreBase=GRADLE_USER_HOME\nzipStorePath=wrapper/dists\n")
-    props.write_text(text)
+    props.write_text(text, encoding="utf-8")
     return new
 
 
