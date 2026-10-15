@@ -23,7 +23,9 @@ from ..platform import TargetInfo
 from ..versions import loader_aliases, satisfies
 from . import prompts
 from .agent import Agent
-from .builder import ensure_wrapper, find_java, run_gradle
+import time
+
+from .builder import ensure_wrapper, find_java, is_transient, run_gradle
 
 Log = Callable[[str], None]
 SOFT_CATEGORIES = ("mixins", "integration_data")
@@ -110,6 +112,14 @@ def port(*, workdir: Path, name: str, mod_id: str, from_mc: str, from_loader: st
         log("  building...")
         build = run_gradle(workdir, java, timeout=build_timeout, loader=target.loader,
                            log_file=meta / "build.log")
+        for retry in range(3):
+            if build.ok or not is_transient(build.log):
+                break
+            wait = 30 * (retry + 1)
+            log(f"  network error while downloading dependencies; retrying in {wait}s")
+            time.sleep(wait)
+            build = run_gradle(workdir, java, timeout=build_timeout, loader=target.loader,
+                               log_file=meta / "build.log")
         if not build.ok:
             log(f"  build failed ({len(build.errors)} error lines)")
             prompt = prompts.build_failed_prompt(build.summary(), attempt, max_attempts)

@@ -214,3 +214,19 @@ def test_port_needs_jdk(tmp_path, forge_jar, monkeypatch):
                       target=TargetInfo("26.3", "neoforge", None, 25), baseline=extract_features(forge_jar),
                       agent=ScriptedAgent([]), java_homes={}, log=lambda m: None)
     assert not res.ok and "JDK 25" in res.notes[0]
+
+
+def test_transient_build_errors_are_retried_not_sent_to_agent(tmp_path, forge_jar, monkeypatch):
+    work = tmp_path / "work"
+    work.mkdir()
+    full = neo_jar(tmp_path / "b" / "full.jar")
+    builds = iter([BuildResult(False, "Could not GET 'x'. Received status code 429 from server"),
+                   BuildResult(True, "", jars=[full])])
+    monkeypatch.setattr(porter, "run_gradle", lambda *a, **k: next(builds))
+    monkeypatch.setattr(porter, "find_java", lambda *a, **k: Path("/jdk25"))
+    monkeypatch.setattr(porter.time, "sleep", lambda s: None)
+    agent = ScriptedAgent([])
+    res = porter.port(workdir=work, name="E", mod_id="examplemod", from_mc="1.20.1", from_loader="forge",
+                      target=TargetInfo("26.3", "neoforge", None, 25), baseline=extract_features(forge_jar),
+                      agent=agent, java_homes={}, log=lambda m: None)
+    assert res.ok and res.attempts == 1 and len(agent.prompts) == 1

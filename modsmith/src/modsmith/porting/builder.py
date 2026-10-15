@@ -203,3 +203,13 @@ def ensure_wrapper(project: Path, java: int, latest: Optional[str] = None) -> Op
                 f"distributionUrl={url}\nzipStoreBase=GRADLE_USER_HOME\nzipStorePath=wrapper/dists\n")
     props.write_text(text)
     return new
+
+
+_TRANSIENT = re.compile(r"status code (?:429|5\d\d)|Read timed out|Connection reset|Connect timed out|"
+                        r"Could not GET .*(?:timed out|refused)|Remote host terminated the handshake|"
+                        r"Could not HEAD .*(?:429|5\d\d)")
+
+
+def is_transient(log: str) -> bool:
+    """Network failures while downloading dependencies are not the mod's fault."""
+    return bool(_TRANSIENT.search(log))
